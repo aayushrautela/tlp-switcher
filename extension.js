@@ -236,8 +236,30 @@ const TLPProfileToggle = GObject.registerClass(
                 
                 enumerator.close(null);
                 
-                // Sort profiles alphabetically
-                profiles.sort((a, b) => a.name.localeCompare(b.name));
+				// Sort profiles with custom priority: Performance, Balanced, Power Saver, then others alphabetically
+				const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+				const aliasToKey = (s) => {
+					const n = normalize(s);
+					if (n === 'performance') return 'performance';
+					if (n === 'balanced') return 'balanced';
+					// Common aliases for power saver
+					if (n === 'power saver' || n === 'powersaver' || n === 'power save' || n === 'battery' || n === 'battery saver' || n === 'battery saving') return 'power saver';
+					return n;
+				};
+				const priority = new Map([
+					['performance', 0],
+					['balanced', 1],
+					['power saver', 2],
+				]);
+				profiles.sort((a, b) => {
+					const ak = aliasToKey(a.name);
+					const bk = aliasToKey(b.name);
+					const ar = priority.has(ak) ? priority.get(ak) : Number.POSITIVE_INFINITY;
+					const br = priority.has(bk) ? priority.get(bk) : Number.POSITIVE_INFINITY;
+					if (ar !== br) return ar - br;
+					// Same priority (both non-priority or same bucket): sort alphabetically by original name
+					return a.name.localeCompare(b.name);
+				});
             } catch (e) {
                 logError(e, 'Failed to get profiles list');
             }
