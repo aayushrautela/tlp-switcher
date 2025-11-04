@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Determine invoking user's home from PKEXEC_UID
+if [[ -n "${PKEXEC_UID-}" ]]; then
+	INV_UID="$PKEXEC_UID"
+else
+	echo "This helper must be invoked via pkexec" >&2
+	exit 1
+fi
+
+INV_USER="$(getent passwd "$INV_UID" | cut -d: -f1)"
+INV_HOME="$(getent passwd "$INV_UID" | cut -d: -f6)"
+if [[ -z "$INV_USER" || -z "$INV_HOME" ]]; then
+	echo "Failed to determine invoking user's home" >&2
+	exit 1
+fi
+
+if [[ $# -ne 1 ]]; then
+	echo "Usage: tlp-switcher-helper <profile-name>" >&2
+	exit 2
+fi
+
+PROFILE_NAME="$1"
+
+# Allow simple names only
+if [[ ! "$PROFILE_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+	echo "Invalid profile name" >&2
+	exit 3
+fi
+
+SRC_CONF="$INV_HOME/.tlp/${PROFILE_NAME}.conf"
+DST_CONF="/etc/tlp.conf"
+
+if [[ ! -f "$SRC_CONF" ]]; then
+	echo "Profile not found: $SRC_CONF" >&2
+	exit 4
+fi
+
+install -m 0644 "$SRC_CONF" "$DST_CONF"
+
+# Apply
+if command -v tlp >/dev/null 2>&1; then
+	tlp start >/dev/null 2>&1 || true
+fi
+
+exit 0
+
+

@@ -129,7 +129,7 @@ const TLPProfileToggle = GObject.registerClass(
                 });
                 
                 item.insert_child_at_index(radioIcon, 0);
-                item.connect('activate', () => this._switchProfile(profile.path));
+                item.connect('activate', () => this._switchProfile(profile.name));
                 
                 profilesSection.addMenuItem(item);
             });
@@ -267,11 +267,11 @@ const TLPProfileToggle = GObject.registerClass(
             return profiles;
         }
         
-        _switchProfile(profilePath) {
+        _switchProfile(profileName) {
             const command = [
                 'pkexec',
-                'sh', '-c',
-                `cp "${profilePath}" /etc/tlp.conf && tlp start`
+                '/usr/libexec/tlp-switcher-helper',
+                profileName
             ];
             
             try {
@@ -286,7 +286,7 @@ const TLPProfileToggle = GObject.registerClass(
                         if (success && source.get_successful()) {
                             this._scheduleMenuUpdate();
                         } else {
-                            logError(new Error('Profile switch failed'), `Failed to switch to profile: ${profilePath}`);
+                            logError(new Error('Profile switch failed'), `Failed to switch to profile: ${profileName}`);
                         }
                     } catch (e) {
                         logError(e, 'Failed to switch profile');
