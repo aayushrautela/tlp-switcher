@@ -3,7 +3,8 @@ import Gtk from 'gi://Gtk';
 import Gio from 'gi://Gio';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import * as ExtensionUtils from 'resource:///org/gnome/Shell/Extensions/js/misc/extensionUtils.js';
+// Remove this line - ExtensionUtils is not needed in preferences
+// import * as ExtensionUtils from 'resource:///org/gnome/Shell/Extensions/js/misc/extensionUtils.js';
 
 export default class TLPProfileSwitcherPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
@@ -108,9 +109,9 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
     }
 
     async _runSetup() {
-        const ext = ExtensionUtils.getCurrentExtension();
-        const helperSrc = `${ext.path}/tool/tlp-switcher-helper`;
-        const policySrc = `${ext.path}/polkit/org.mahaon.tlp-switcher.policy`;
+        // Use this.dir instead of ExtensionUtils.getCurrentExtension()
+        const helperSrc = this.dir.get_child('tool').get_child('tlp-switcher-helper').get_path();
+        const policySrc = this.dir.get_child('polkit').get_child('org.mahaon.tlp-switcher.policy').get_path();
 
         const cmd = [
             'pkexec',
