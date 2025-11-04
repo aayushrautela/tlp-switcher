@@ -3,7 +3,7 @@ import Gtk from 'gi://Gtk';
 import Gio from 'gi://Gio';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import * as ExtensionUtils from 'resource:///org/gnome/shell/misc/extensionUtils.js';
+import * as ExtensionUtils from 'resource:///org/gnome/Shell/Extensions/js/misc/extensionUtils.js';
 
 export default class TLPProfileSwitcherPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
