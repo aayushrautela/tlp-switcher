@@ -73,7 +73,12 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
             const installed = this._isHelperInstalled();
             button.sensitive = !installed;
             row.subtitle = installed ? 'Helper and policy are installed' : 'Copies helper to /usr/libexec and installs polkit policy';
-            settings.set_boolean('setup-complete', installed);
+            try {
+                settings.set_boolean('setup-complete', installed);
+            } catch (e) {
+                // Schema key might not be available yet, ignore silently
+                console.warn('Could not set setup-complete:', e.message);
+            }
         };
 
         button.connect('clicked', () => {
