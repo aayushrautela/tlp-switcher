@@ -85,7 +85,9 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
             }).catch((e) => {
                 updateUI();
                 logError(e, 'Setup failed');
-                this._showToast('Setup failed. Check logs for details.', 'error');
+                // Show the actual error message in the toast
+                const errorMsg = e.message || 'Setup failed';
+                this._showToast(errorMsg, 'error');
             });
         });
 
@@ -144,7 +146,9 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
                             // User cancelled or privilege denied
                             reject(new Error('Privilege required or user cancelled'));
                         } else {
-                            reject(new Error(`Setup failed with exit code ${exitStatus}`));
+                            // Include stderr in error message if available
+                            const errorDetails = stderr ? `: ${stderr.trim()}` : '';
+                            reject(new Error(`Setup failed with exit code ${exitStatus}${errorDetails}`));
                         }
                     } catch (e) {
                         logError(e, 'Error during setup communication');
