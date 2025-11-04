@@ -7,6 +7,7 @@ import * as ExtensionUtils from 'resource:///org/gnome/Shell/Extensions/js/misc/
 
 export default class TLPProfileSwitcherPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
+        this._window = window;
         const settings = this.getSettings();
         
         // Create main page
@@ -77,7 +78,15 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
         };
 
         button.connect('clicked', () => {
-            this._runSetup().then(() => updateUI()).catch(() => updateUI());
+            button.sensitive = false;
+            this._runSetup().then(() => {
+                updateUI();
+                this._showToast('Setup completed successfully', 'success');
+            }).catch((e) => {
+                updateUI();
+                logError(e, 'Setup failed');
+                this._showToast('Setup failed. Check logs for details.', 'error');
+            });
         });
 
         row.add_suffix(button);
@@ -113,18 +122,50 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
 
         return new Promise((resolve, reject) => {
             try {
-                const proc = Gio.Subprocess.new(cmd, Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE);
-                proc.wait_async(null, (source, result) => {
+                const flags = Gio.SubprocessFlags.STDOUT_PIPE | 
+                              Gio.SubprocessFlags.STDERR_PIPE;
+                const proc = Gio.Subprocess.new(cmd, flags);
+                
+                proc.communicate_utf8_async(null, null, (obj, res) => {
                     try {
-                        const ok = source.wait_finish(result) && source.get_successful();
-                        ok ? resolve() : reject(new Error('setup failed'));
+                        const [, stdout, stderr] = obj.communicate_utf8_finish(res);
+                        const exitStatus = obj.get_exit_status();
+                        
+                        if (stderr) {
+                            log(`TLP Switcher setup stderr: ${stderr}`);
+                        }
+                        if (stdout) {
+                            log(`TLP Switcher setup stdout: ${stdout}`);
+                        }
+                        
+                        if (exitStatus === 0) {
+                            resolve();
+                        } else if (exitStatus === 126) {
+                            // User cancelled or privilege denied
+                            reject(new Error('Privilege required or user cancelled'));
+                        } else {
+                            reject(new Error(`Setup failed with exit code ${exitStatus}`));
+                        }
                     } catch (e) {
+                        logError(e, 'Error during setup communication');
                         reject(e);
                     }
                 });
             } catch (e) {
+                logError(e, 'Error creating subprocess');
                 reject(e);
             }
         });
+    }
+
+    _showToast(message, type = 'info') {
+        if (this._window) {
+            const toast = new Adw.Toast({
+                title: message,
+                timeout: 3
+            });
+            this._window.add_toast(toast);
+        }
+        log(`TLP Switcher: ${message}`);
     }
 }
