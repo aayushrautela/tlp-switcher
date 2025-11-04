@@ -27,7 +27,7 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
         page.add(appearanceGroup);
 
         // One-time setup group
-        page.add(this._createSetupGroup(settings));
+        page.add(this._createSetupGroup());
         window.add(page);
     }
     
@@ -56,7 +56,7 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
         return widthRow;
     }
 
-    _createSetupGroup(settings) {
+    _createSetupGroup() {
         const setupGroup = new Adw.PreferencesGroup({
             title: 'One-time Setup',
             description: 'Install the privileged helper and PolicyKit rule so switching works smoothly.'
@@ -73,12 +73,7 @@ export default class TLPProfileSwitcherPreferences extends ExtensionPreferences 
             const installed = this._isHelperInstalled();
             button.sensitive = !installed;
             row.subtitle = installed ? 'Helper and policy are installed' : 'Copies helper to /usr/libexec and installs polkit policy';
-            try {
-                settings.set_boolean('setup-complete', installed);
-            } catch (e) {
-                // Schema key might not be available yet, ignore silently
-                console.warn('Could not set setup-complete:', e.message);
-            }
+            // No need to store in GSettings - we check the actual files each time
         };
 
         button.connect('clicked', () => {
