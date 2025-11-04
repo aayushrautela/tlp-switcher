@@ -24,8 +24,8 @@ fi
 
 PROFILE_NAME="$1"
 
-# Allow simple names only
-if [[ ! "$PROFILE_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+# Allow simple names and spaces
+if [[ ! "$PROFILE_NAME" =~ ^[A-Za-z0-9._\ -]+$ ]]; then
 	echo "Invalid profile name" >&2
 	exit 3
 fi

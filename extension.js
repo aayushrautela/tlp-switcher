@@ -280,13 +280,17 @@ const TLPProfileToggle = GObject.registerClass(
                     Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
                 );
                 
-                proc.wait_async(null, (source, result) => {
+                proc.communicate_utf8_async(null, null, (obj, res) => {
                     try {
-                        const success = source.wait_finish(result);
-                        if (success && source.get_successful()) {
+                        const [, stdout, stderr] = obj.communicate_utf8_finish(res);
+                        const exitStatus = obj.get_exit_status();
+
+                        if (exitStatus === 0) {
                             this._scheduleMenuUpdate();
                         } else {
-                            logError(new Error('Profile switch failed'), `Failed to switch to profile: ${profileName}`);
+                            const errorDetails = stderr ? `: ${stderr.trim()}` : '';
+                            const errorMessage = `Failed to switch to profile: ${profileName}${errorDetails}`;
+                            logError(new Error('Profile switch failed'), errorMessage);
                         }
                     } catch (e) {
                         logError(e, 'Failed to switch profile');
