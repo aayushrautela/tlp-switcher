@@ -7,5 +7,10 @@
       <description>Number of columns the widget should occupy in Quick Settings (1 or 2)</description>
       <range min="1" max="2"/>
     </key>
+    <key name="setup-complete" type="b">
+      <default>false</default>
+      <summary>One-time privileged setup completed</summary>
+      <description>Tracks whether the helper and polkit policy were installed system-wide</description>
+    </key>
   </schema>
 </schemalist>
